@@ -1,17 +1,42 @@
-function move(array, fromIndex, toIndex) {
-  let arr = array.slice();
-  let len = arr.length;
+function processConnections(logs) {
+  let userConnections = new Map();
 
-  fromIndex = fromIndex < 0 ? len + fromIndex : fromIndex;
-  toIndex = toIndex < 0 ? len + toIndex : toIndex;
+  logs.forEach(log => {
+      let parts = log.match(/IP=([\d.]+)\s+message=.*\s+user=(\w+)/);
+      if (!parts) return;
 
-  if (fromIndex >= 0 && fromIndex < len && toIndex >= 0 && toIndex < len) {
-    let [item] = arr.splice(fromIndex, 1);
-    arr.splice(toIndex, 0, item);
-  }
+      let [_, ip, user] = parts;
 
-  return arr;
+      if (!userConnections.has(user)) {
+          userConnections.set(user, new Map());
+      }
+
+      let ipMap = userConnections.get(user);
+      ipMap.set(ip, (ipMap.get(ip) || 0) + 1);
+  });
+
+  userConnections.forEach((ips, user) => {
+      console.log(`${user}:`);
+      ips.forEach((count, ip) => {
+          console.log(`  ${ip} => ${count}`);
+      });
+  });
 }
 
-console.log(move([10, 20, 30, 40, 50], 0, 2));
-console.log(move([10, 20, 30, 40, 50], -1, -2));
+const logs1 = [
+  "IP=192.23.30.40 message='Hello&derps.' user=destroyer",
+  "IP=192.23.30.41 message='Hello&yall.' user=destroyer",
+  "IP=192.23.30.40 message='Hello&hi.' user=destroyer",
+  "IP=192.23.30.42 message='Hello&Dudes.' user=destroyer",
+  "IP=192.23.30.41 message='Hey&son' user=mother",
+  "IP=192.23.33.40 message='Hi&mom!' user=child0",
+  "IP=192.23.30.40 message='Hi&from&me&too' user=child1",
+  "IP=192.23.30.42 message='spam' user=destroyer",
+  "IP=192.23.30.42 message='spam' user=destroyer",
+  "IP=192.23.30.41 message='spam' user=destroyer",
+  "IP=192.23.50.40 message='' user=yetAnotherUsername",
+  "IP=192.23.50.40 message='comment' user=yetAnotherUsername",
+  "IP=192.23.155.40 message='Hello.' user=unknown"
+];
+
+processConnections(logs1);
